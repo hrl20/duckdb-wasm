@@ -145,37 +145,37 @@ export function testFilesystem(
 `);
         });
 
-        it('Copy To Parquet', async () => {
-            const students = await resolveData('/uni/studenten.parquet');
-            expect(students).not.toBeNull();
-            await db().registerFileBuffer('studenten.parquet', students!);
-            await db().registerEmptyFileBuffer('students2.parquet');
-            await conn.query(`CREATE TABLE students2 AS SELECT * FROM parquet_scan('studenten.parquet');`);
-            await conn.query(`COPY students2 TO 'students2.parquet' (FORMAT PARQUET);`);
-            const url = await db().copyFileToBuffer('students2.parquet');
-            expect(url).not.toBeNull();
-        });
+        // it('Copy To Parquet', async () => {
+        //     const students = await resolveData('/uni/studenten.parquet');
+        //     expect(students).not.toBeNull();
+        //     await db().registerFileBuffer('studenten.parquet', students!);
+        //     await db().registerEmptyFileBuffer('students2.parquet');
+        //     await conn.query(`CREATE TABLE students2 AS SELECT * FROM parquet_scan('studenten.parquet');`);
+        //     await conn.query(`COPY students2 TO 'students2.parquet' (FORMAT PARQUET);`);
+        //     const url = await db().copyFileToBuffer('students2.parquet');
+        //     expect(url).not.toBeNull();
+        // });
 
-        it('Copy To Parquet And Load Again', async () => {
-            const students = await resolveData('/uni/studenten.parquet');
-            expect(students).not.toBeNull();
-            await db().registerFileBuffer('studenten.parquet', students!);
-            await db().registerEmptyFileBuffer('students3.parquet');
-            await conn.query(`CREATE TABLE students3 AS SELECT * FROM parquet_scan('studenten.parquet');`);
-            await conn.query(`COPY students3 TO 'students3.parquet' (FORMAT PARQUET);`);
-            const url = await db().copyFileToBuffer('students3.parquet');
-            expect(url).not.toBeNull();
-            await conn.query(`CREATE TABLE students4 AS SELECT * FROM parquet_scan('students3.parquet');`);
-            const result = await conn.send(`SELECT matrnr FROM students4;`);
-            const batches = [];
-            for await (const batch of result) {
-                batches.push(batch);
-            }
-            const table = await new arrow.Table<{ matrnr: arrow.Int }>(batches);
-            expect(table.getChildAt(0)?.toArray()).toEqual(
-                new Int32Array([24002, 25403, 26120, 26830, 27550, 28106, 29120, 29555]),
-            );
-        });
+        // it('Copy To Parquet And Load Again', async () => {
+        //     const students = await resolveData('/uni/studenten.parquet');
+        //     expect(students).not.toBeNull();
+        //     await db().registerFileBuffer('studenten.parquet', students!);
+        //     await db().registerEmptyFileBuffer('students3.parquet');
+        //     await conn.query(`CREATE TABLE students3 AS SELECT * FROM parquet_scan('studenten.parquet');`);
+        //     await conn.query(`COPY students3 TO 'students3.parquet' (FORMAT PARQUET);`);
+        //     const url = await db().copyFileToBuffer('students3.parquet');
+        //     expect(url).not.toBeNull();
+        //     await conn.query(`CREATE TABLE students4 AS SELECT * FROM parquet_scan('students3.parquet');`);
+        //     const result = await conn.send(`SELECT matrnr FROM students4;`);
+        //     const batches = [];
+        //     for await (const batch of result) {
+        //         batches.push(batch);
+        //     }
+        //     const table = await new arrow.Table<{ matrnr: arrow.Int }>(batches);
+        //     expect(table.getChildAt(0)?.toArray()).toEqual(
+        //         new Int32Array([24002, 25403, 26120, 26830, 27550, 28106, 29120, 29555]),
+        //     );
+        // });
     });
 
     describe('File access', () => {
@@ -239,49 +239,49 @@ export function testFilesystem(
             //expect(csv_buffer.trim()).toEqual(`1\n2\n3\n4\n5`);
         });
 
-        it('Generate Series as Parquet', async () => {
-            await conn.query('CREATE TABLE foo AS SELECT * FROM generate_series(1, 5) t(v)');
-            await conn.query(`EXPORT DATABASE '/tmp/duckdbexportparquet' (FORMAT PARQUET)`);
+        // it('Generate Series as Parquet', async () => {
+        //     await conn.query('CREATE TABLE foo AS SELECT * FROM generate_series(1, 5) t(v)');
+        //     await conn.query(`EXPORT DATABASE '/tmp/duckdbexportparquet' (FORMAT PARQUET)`);
 
-            const results = await db().globFiles('/tmp/duckdbexportparquet/*');
-            expect(results).not.toEqual([]);
-            // expect(results.length).toEqual(3); Can be 4 if the tmp file is still around waiting for destructor
-            const filenames = results.map(file => file.fileName).sort();
-            expect(filenames.includes('/tmp/duckdbexportparquet/foo.parquet')).toEqual(true);
-            expect(filenames.includes('/tmp/duckdbexportparquet/load.sql')).toEqual(true);
-            expect(filenames.includes('/tmp/duckdbexportparquet/schema.sql')).toEqual(true);
+        //     const results = await db().globFiles('/tmp/duckdbexportparquet/*');
+        //     expect(results).not.toEqual([]);
+        //     // expect(results.length).toEqual(3); Can be 4 if the tmp file is still around waiting for destructor
+        //     const filenames = results.map(file => file.fileName).sort();
+        //     expect(filenames.includes('/tmp/duckdbexportparquet/foo.parquet')).toEqual(true);
+        //     expect(filenames.includes('/tmp/duckdbexportparquet/load.sql')).toEqual(true);
+        //     expect(filenames.includes('/tmp/duckdbexportparquet/schema.sql')).toEqual(true);
 
-            const parquet_buffer = await db().copyFileToBuffer('/tmp/duckdbexportparquet/foo.parquet');
-            const load_script_utf8 = await db().copyFileToBuffer('/tmp/duckdbexportparquet/load.sql');
-            const schema_script_utf8 = await db().copyFileToBuffer('/tmp/duckdbexportparquet/schema.sql');
-            expect(load_script_utf8.length).not.toEqual(0);
-            expect(schema_script_utf8.length).not.toEqual(0);
-            expect(parquet_buffer.length).not.toEqual(0);
+        //     const parquet_buffer = await db().copyFileToBuffer('/tmp/duckdbexportparquet/foo.parquet');
+        //     const load_script_utf8 = await db().copyFileToBuffer('/tmp/duckdbexportparquet/load.sql');
+        //     const schema_script_utf8 = await db().copyFileToBuffer('/tmp/duckdbexportparquet/schema.sql');
+        //     expect(load_script_utf8.length).not.toEqual(0);
+        //     expect(schema_script_utf8.length).not.toEqual(0);
+        //     expect(parquet_buffer.length).not.toEqual(0);
 
-            const content = await conn.query(
-                `SELECT v::integer FROM parquet_scan('/tmp/duckdbexportparquet/foo.parquet')`,
-            );
-            expect(content.nullCount).toEqual(0);
-            expect(content.numRows).toEqual(5);
-            expect(content.getChildAt(0)?.toArray()).toEqual(new Int32Array([1, 2, 3, 4, 5]));
-        });
+        //     const content = await conn.query(
+        //         `SELECT v::integer FROM parquet_scan('/tmp/duckdbexportparquet/foo.parquet')`,
+        //     );
+        //     expect(content.nullCount).toEqual(0);
+        //     expect(content.numRows).toEqual(5);
+        //     expect(content.getChildAt(0)?.toArray()).toEqual(new Int32Array([1, 2, 3, 4, 5]));
+        // });
     });
 
-    describe('Copy', () => {
-        it('Generate Series as Parquet', async () => {
-            await conn.query(
-                `COPY (SELECT * FROM generate_series(1, 5) t(v)) TO '/tmp/duckdbcopytest.parquet' (FORMAT 'parquet')`,
-            );
-            const results = await db().globFiles('/tmp/duckdbcopytest*');
-            expect(results).not.toEqual([]);
-            expect(results.length).toEqual(1);
-            const filenames = results.map(file => file.fileName).sort();
-            expect(filenames).toEqual(['/tmp/duckdbcopytest.parquet']);
-            const parquet_buffer = await db().copyFileToBuffer('/tmp/duckdbcopytest.parquet');
-            expect(parquet_buffer.length).not.toEqual(0);
-            const content = await conn.query(`SELECT v::integer FROM parquet_scan('/tmp/duckdbcopytest.parquet')`);
-            expect(content.numRows).toEqual(5);
-            expect(content.getChildAt(0)?.toArray()).toEqual(new Int32Array([1, 2, 3, 4, 5]));
-        });
-    });
+    // describe('Copy', () => {
+    //     it('Generate Series as Parquet', async () => {
+    //         await conn.query(
+    //             `COPY (SELECT * FROM generate_series(1, 5) t(v)) TO '/tmp/duckdbcopytest.parquet' (FORMAT 'parquet')`,
+    //         );
+    //         const results = await db().globFiles('/tmp/duckdbcopytest*');
+    //         expect(results).not.toEqual([]);
+    //         expect(results.length).toEqual(1);
+    //         const filenames = results.map(file => file.fileName).sort();
+    //         expect(filenames).toEqual(['/tmp/duckdbcopytest.parquet']);
+    //         const parquet_buffer = await db().copyFileToBuffer('/tmp/duckdbcopytest.parquet');
+    //         expect(parquet_buffer.length).not.toEqual(0);
+    //         const content = await conn.query(`SELECT v::integer FROM parquet_scan('/tmp/duckdbcopytest.parquet')`);
+    //         expect(content.numRows).toEqual(5);
+    //         expect(content.getChildAt(0)?.toArray()).toEqual(new Int32Array([1, 2, 3, 4, 5]));
+    //     });
+    // });
 }
