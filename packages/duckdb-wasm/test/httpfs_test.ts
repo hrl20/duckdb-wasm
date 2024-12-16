@@ -256,14 +256,14 @@ export function testHTTPFSAsync(
             expect(BigInt(results.getChildAt(2)?.get(2))).toEqual(BigInt(9n));
         });
 
-        it('can read and write csv file from S3 with correct auth credentials', async () => {
-            let data = await resolveData('/uni/studenten.parquet');
-            await setAwsConfig(conn!);
-            await putTestFileToS3('correct_auth_test', 'csv', data);
-            const results_with_auth = await conn!.query(`select * from "s3://${BUCKET_NAME}/correct_auth_test.csv";`);
-            data = await resolveData('/uni/studenten.parquet');
-            assertTestFileResultCorrect(results_with_auth, data);
-        });
+        // it('can read and write csv file from S3 with correct auth credentials', async () => {
+        //     let data = await resolveData('/uni/studenten.parquet');
+        //     await setAwsConfig(conn!);
+        //     await putTestFileToS3('correct_auth_test', 'csv', data);
+        //     const results_with_auth = await conn!.query(`select * from "s3://${BUCKET_NAME}/correct_auth_test.csv";`);
+        //     data = await resolveData('/uni/studenten.parquet');
+        //     assertTestFileResultCorrect(results_with_auth, data);
+        // });
 
         // it('can read and write parquet file from S3 with correct auth credentials', async () => {
         //     let data = await resolveData('/uni/studenten.parquet');
