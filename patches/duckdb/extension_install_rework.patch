@@ -1,18 +1,20 @@
 diff --git a/src/include/duckdb/main/database.hpp b/src/include/duckdb/main/database.hpp
-index 2a6fffa994..f4ef687ddd 100644
+index 2a6fffa994..e33b337376 100644
 --- a/src/include/duckdb/main/database.hpp
 +++ b/src/include/duckdb/main/database.hpp
-@@ -96,6 +96,10 @@ private:
+@@ -96,6 +96,11 @@ private:
  	shared_ptr<DatabaseCacheEntry> db_cache_entry;
  
  	duckdb_ext_api_v0 (*create_api_v0)();
++
 +public:
-+	static void SetPreferredRepository(const string& extension, const string &repository);
-+	static string GetPreferredRepository(const string& extension);
++	static void SetPreferredRepository(const string &extension, const string &repository);
++	static string GetPreferredRepository(const string &extension);
 +	static unordered_map<string, string> extensionsRepos;
  };
  
  //! The database object. This object holds the catalog and all the
+
 diff --git a/src/include/duckdb/main/extension_install_info.hpp b/src/include/duckdb/main/extension_install_info.hpp
 index 6ccd1a1156..8040f537b6 100644
 --- a/src/include/duckdb/main/extension_install_info.hpp

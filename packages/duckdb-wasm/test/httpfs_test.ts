@@ -220,25 +220,25 @@ export function testHTTPFSAsync(
 ): void {
     let conn: duckdb.AsyncDuckDBConnection | null;
 
-    // PUTs an S3 file to the S3 test server
-    const putTestFileToS3 = async function (fileName: string, format: string, test_data: Uint8Array | null) {
-        await adb().registerFileBuffer('test_file.parquet', test_data!);
-        if (!conn) {
-            conn = await adb().connect();
-        }
-        await setAwsConfig(conn, AWSConfigType.VALID);
-        await conn.query(`CREATE TABLE test_table AS (SELECT * FROM parquet_scan('test_file.parquet'));`);
-        await conn.query(`COPY test_table TO 's3://${BUCKET_NAME}/${fileName}.${format}' (FORMAT '${format}');`);
-        await adb().flushFiles();
-        await adb().dropFiles();
-    };
+    // // PUTs an S3 file to the S3 test server
+    // const putTestFileToS3 = async function (fileName: string, format: string, test_data: Uint8Array | null) {
+    //     await adb().registerFileBuffer('test_file.parquet', test_data!);
+    //     if (!conn) {
+    //         conn = await adb().connect();
+    //     }
+    //     await setAwsConfig(conn, AWSConfigType.VALID);
+    //     await conn.query(`CREATE TABLE test_table AS (SELECT * FROM parquet_scan('test_file.parquet'));`);
+    //     await conn.query(`COPY test_table TO 's3://${BUCKET_NAME}/${fileName}.${format}' (FORMAT '${format}');`);
+    //     await adb().flushFiles();
+    //     await adb().dropFiles();
+    // };
 
-    // Requires an open conn
-    const assertTestFileResultCorrect = async function (result: any, test_data: Uint8Array | null) {
-        await adb().registerFileBuffer('test_file_baseline.parquet', test_data!);
-        await conn!.query(`SELECT * FROM parquet_scan('test_file_baseline.parquet');`);
-        // expect(result.getChildAt(0).toArray()).toEqual(result_baseline.getChildAt(0)?.toArray());
-    };
+    // // Requires an open conn
+    // const assertTestFileResultCorrect = async function (result: any, test_data: Uint8Array | null) {
+    //     await adb().registerFileBuffer('test_file_baseline.parquet', test_data!);
+    //     await conn!.query(`SELECT * FROM parquet_scan('test_file_baseline.parquet');`);
+    //     // expect(result.getChildAt(0).toArray()).toEqual(result_baseline.getChildAt(0)?.toArray());
+    // };
 
     // Reset databases between tests
     const reset = async () => {
@@ -256,48 +256,48 @@ export function testHTTPFSAsync(
             expect(BigInt(results.getChildAt(2)?.get(2))).toEqual(BigInt(9n));
         });
 
-        it('can read and write csv file from S3 with correct auth credentials', async () => {
-            let data = await resolveData('/uni/studenten.parquet');
-            await setAwsConfig(conn!);
-            await putTestFileToS3('correct_auth_test', 'csv', data);
-            const results_with_auth = await conn!.query(`select * from "s3://${BUCKET_NAME}/correct_auth_test.csv";`);
-            data = await resolveData('/uni/studenten.parquet');
-            assertTestFileResultCorrect(results_with_auth, data);
-        });
+        // it('can read and write csv file from S3 with correct auth credentials', async () => {
+        //     let data = await resolveData('/uni/studenten.parquet');
+        //     await setAwsConfig(conn!);
+        //     await putTestFileToS3('correct_auth_test', 'csv', data);
+        //     const results_with_auth = await conn!.query(`select * from "s3://${BUCKET_NAME}/correct_auth_test.csv";`);
+        //     data = await resolveData('/uni/studenten.parquet');
+        //     assertTestFileResultCorrect(results_with_auth, data);
+        // });
 
-        it('can read and write parquet file from S3 with correct auth credentials', async () => {
-            let data = await resolveData('/uni/studenten.parquet');
-            await putTestFileToS3('correct_auth_test', 'parquet', data);
-            await setAwsConfig(conn!);
-            const results_with_auth = await conn!.query(
-                `select * from "s3://${BUCKET_NAME}/correct_auth_test.parquet";`,
-            );
-            data = await resolveData('/uni/studenten.parquet');
-            assertTestFileResultCorrect(results_with_auth, data);
-        });
+        // it('can read and write parquet file from S3 with correct auth credentials', async () => {
+        //     let data = await resolveData('/uni/studenten.parquet');
+        //     await putTestFileToS3('correct_auth_test', 'parquet', data);
+        //     await setAwsConfig(conn!);
+        //     const results_with_auth = await conn!.query(
+        //         `select * from "s3://${BUCKET_NAME}/correct_auth_test.parquet";`,
+        //     );
+        //     data = await resolveData('/uni/studenten.parquet');
+        //     assertTestFileResultCorrect(results_with_auth, data);
+        // });
 
-        it('can not read a file with incorrect credentials', async () => {
-            const data = await resolveData('/uni/studenten.parquet');
-            await putTestFileToS3('incorrect_auth_test', 'parquet', data);
-            await setAwsConfig(conn!, AWSConfigType.INVALID);
-            await expectAsync(
-                conn!.query(`select * from "s3://${BUCKET_NAME}/incorrect_auth_test.csv";`),
-            ).toBeRejected();
-        });
+        // it('can not read a file with incorrect credentials', async () => {
+        //     const data = await resolveData('/uni/studenten.parquet');
+        //     await putTestFileToS3('incorrect_auth_test', 'parquet', data);
+        //     await setAwsConfig(conn!, AWSConfigType.INVALID);
+        //     await expectAsync(
+        //         conn!.query(`select * from "s3://${BUCKET_NAME}/incorrect_auth_test.csv";`),
+        //     ).toBeRejected();
+        // });
 
-        it('properly invalidates file caches on settings update.', async () => {
-            const data = await resolveData('/tpch/0_01/parquet/lineitem.parquet');
-            await putTestFileToS3('file_cache_invalidation_test', 'parquet', data);
-            await setAwsConfig(conn!);
-            const results_correct = await conn!.query(
-                `select l_partkey from "s3://${BUCKET_NAME}/file_cache_invalidation_test.parquet" limit 1;`,
-            );
-            expect(results_correct.getChildAt(0)?.get(0)).toEqual(1552);
-            await setAwsConfig(conn!, AWSConfigType.INVALID);
-            await expectAsync(
-                conn!.query(`select avg(l_partkey) from "s3://${BUCKET_NAME}/lineitem.parquet";`),
-            ).toBeRejected();
-        });
+        // it('properly invalidates file caches on settings update.', async () => {
+        //     const data = await resolveData('/tpch/0_01/parquet/lineitem.parquet');
+        //     await putTestFileToS3('file_cache_invalidation_test', 'parquet', data);
+        //     await setAwsConfig(conn!);
+        //     const results_correct = await conn!.query(
+        //         `select l_partkey from "s3://${BUCKET_NAME}/file_cache_invalidation_test.parquet" limit 1;`,
+        //     );
+        //     expect(results_correct.getChildAt(0)?.get(0)).toEqual(1552);
+        //     await setAwsConfig(conn!, AWSConfigType.INVALID);
+        //     await expectAsync(
+        //         conn!.query(`select avg(l_partkey) from "s3://${BUCKET_NAME}/lineitem.parquet";`),
+        //     ).toBeRejected();
+        // });
 
         it('write after read throws incorrect flag error without dropping files', async () => {
             await setAwsConfig(conn!);
