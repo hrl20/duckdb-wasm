@@ -220,25 +220,25 @@ export function testHTTPFSAsync(
 ): void {
     let conn: duckdb.AsyncDuckDBConnection | null;
 
-    // PUTs an S3 file to the S3 test server
-    const putTestFileToS3 = async function (fileName: string, format: string, test_data: Uint8Array | null) {
-        await adb().registerFileBuffer('test_file.parquet', test_data!);
-        if (!conn) {
-            conn = await adb().connect();
-        }
-        await setAwsConfig(conn, AWSConfigType.VALID);
-        await conn.query(`CREATE TABLE test_table AS (SELECT * FROM parquet_scan('test_file.parquet'));`);
-        await conn.query(`COPY test_table TO 's3://${BUCKET_NAME}/${fileName}.${format}' (FORMAT '${format}');`);
-        await adb().flushFiles();
-        await adb().dropFiles();
-    };
+    // // PUTs an S3 file to the S3 test server
+    // const putTestFileToS3 = async function (fileName: string, format: string, test_data: Uint8Array | null) {
+    //     await adb().registerFileBuffer('test_file.parquet', test_data!);
+    //     if (!conn) {
+    //         conn = await adb().connect();
+    //     }
+    //     await setAwsConfig(conn, AWSConfigType.VALID);
+    //     await conn.query(`CREATE TABLE test_table AS (SELECT * FROM parquet_scan('test_file.parquet'));`);
+    //     await conn.query(`COPY test_table TO 's3://${BUCKET_NAME}/${fileName}.${format}' (FORMAT '${format}');`);
+    //     await adb().flushFiles();
+    //     await adb().dropFiles();
+    // };
 
-    // Requires an open conn
-    const assertTestFileResultCorrect = async function (result: any, test_data: Uint8Array | null) {
-        await adb().registerFileBuffer('test_file_baseline.parquet', test_data!);
-        await conn!.query(`SELECT * FROM parquet_scan('test_file_baseline.parquet');`);
-        // expect(result.getChildAt(0).toArray()).toEqual(result_baseline.getChildAt(0)?.toArray());
-    };
+    // // Requires an open conn
+    // const assertTestFileResultCorrect = async function (result: any, test_data: Uint8Array | null) {
+    //     await adb().registerFileBuffer('test_file_baseline.parquet', test_data!);
+    //     await conn!.query(`SELECT * FROM parquet_scan('test_file_baseline.parquet');`);
+    //     // expect(result.getChildAt(0).toArray()).toEqual(result_baseline.getChildAt(0)?.toArray());
+    // };
 
     // Reset databases between tests
     const reset = async () => {

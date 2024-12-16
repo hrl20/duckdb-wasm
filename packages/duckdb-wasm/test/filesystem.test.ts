@@ -1,7 +1,7 @@
 import * as duckdb from '../src/';
-import * as arrow from 'apache-arrow';
+// import * as arrow from 'apache-arrow';
 
-const decoder = new TextDecoder();
+// const decoder = new TextDecoder();
 
 export function testFilesystem(
     db: () => duckdb.AsyncDuckDB,
